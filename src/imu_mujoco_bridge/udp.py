@@ -7,10 +7,19 @@ from typing import Iterator
 from .packet import QuaternionPacket, parse_packet
 
 
-def receive_packets(host: str, port: int, timeout: float | None = None) -> Iterator[QuaternionPacket]:
+def make_udp_socket(host: str, port: int, timeout: float | None = None) -> socket.socket:
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     sock.bind((host, port))
     sock.settimeout(timeout)
+    return sock
+
+
+def receive_packets(host: str, port: int, timeout: float | None = None) -> Iterator[QuaternionPacket]:
+    sock = make_udp_socket(host, port, timeout)
+    yield from receive_packets_from_socket(sock)
+
+
+def receive_packets_from_socket(sock: socket.socket) -> Iterator[QuaternionPacket]:
     try:
         while True:
             payload, _address = sock.recvfrom(2048)
@@ -34,4 +43,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

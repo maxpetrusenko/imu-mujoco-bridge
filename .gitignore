@@ -13,4 +13,5 @@ firmware/include/config.h
 .agents/
 .codex/
 .claude/
-
+state/
+docs/demo-frames/

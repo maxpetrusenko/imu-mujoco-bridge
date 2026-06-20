@@ -2,6 +2,10 @@
 
 Stream BNO055 absolute-orientation quaternions into a MuJoCo model.
 
+[![Simulated IMU quaternion stream driving a probe body](docs/demo-poster.png)](docs/demo.mp4)
+
+[Watch the simulated demo video](docs/demo.mp4)
+
 This repeats the useful part of the referenced demo: an M5 ATOM Lite reads a
 BNO055 IMU, sends quaternion packets over UDP, and a PC uses those packets to
 rotate a MuJoCo body in real time.
@@ -52,6 +56,14 @@ python -m pip install -e .
 python -m imu_mujoco_bridge.demo --packets 3
 PYTHONPATH=src python -m unittest discover -s tests
 ```
+
+Render the hardware-free imitation video:
+
+```sh
+imu-render-demo --output docs/demo.mp4
+```
+
+This command uses `ffmpeg`.
 
 Optional MuJoCo viewer:
 

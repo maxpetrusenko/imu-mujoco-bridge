@@ -29,6 +29,7 @@ dev = ["ruff>=0.12.0"]
 imu-udp-dump = "imu_mujoco_bridge.udp:main"
 imu-mujoco-viewer = "imu_mujoco_bridge.mujoco_viewer:main"
 imu-sim-packets = "imu_mujoco_bridge.demo:main"
+imu-render-demo = "imu_mujoco_bridge.render_demo:main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/imu_mujoco_bridge"]
