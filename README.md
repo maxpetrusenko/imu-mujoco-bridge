@@ -73,6 +73,8 @@ npm run serve
 
 Open `http://127.0.0.1:4173/web/lab.html`.
 
+For the 3D synthetic twin, open `http://127.0.0.1:4173/web/twin.html`.
+
 Run the no-hardware end-to-end gate:
 
 ```sh
@@ -151,6 +153,24 @@ Playwright checks:
 - calibration starts at `0,0,0,0`.
 
 See `docs/SYNTHETIC_TEST_PLAN.md` for the no-hardware readiness matrix.
+
+## 3D Twin Lab
+
+The 3D twin is the highest-signal no-hardware demo. It shows two linked bodies:
+
+![3D twin source and response boxes](docs/twin-screenshot.png)
+
+- left source box: the virtual IMU stream;
+- cable: the UDP packet link, with moving pulses;
+- right response box: a damped spring body replying to the source movement.
+
+Run it locally:
+
+```sh
+npm run serve
+```
+
+Open `http://127.0.0.1:4173/web/twin.html`.
 
 ## Camera Marker Mode
 

@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>IMU Twin Lab</title>
+    <link rel="stylesheet" href="./twin.css" />
+  </head>
+  <body>
+    <canvas id="twin-scene" aria-label="3D synthetic twin scene"></canvas>
+    <main class="hud" aria-label="twin telemetry">
+      <section>
+        <h1>IMU Twin Lab</h1>
+        <p>Source box drives packets. Response box follows through a damped physics link.</p>
+      </section>
+      <dl>
+        <div>
+          <dt>Frame</dt>
+          <dd id="twin-frame">0</dd>
+        </div>
+        <div>
+          <dt>Lag</dt>
+          <dd id="twin-lag">0 deg</dd>
+        </div>
+        <div>
+          <dt>Spring</dt>
+          <dd id="twin-spring">0.00</dd>
+        </div>
+        <div>
+          <dt>Packet</dt>
+          <dd><code id="twin-packet">waiting</code></dd>
+        </div>
+      </dl>
+      <div class="controls">
+        <button id="twin-toggle" type="button">Pause</button>
+        <button id="twin-reset" type="button">Reset</button>
+      </div>
+    </main>
+    <script src="./replay.js"></script>
+    <script type="module" src="./twin.js"></script>
+  </body>
+</html>
+

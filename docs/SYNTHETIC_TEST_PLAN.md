@@ -13,6 +13,7 @@ synthetic lab that proves every software-owned boundary.
 | Transport | UDP loopback tests receive real datagrams through the same parser used by hardware. |
 | Replay export | `imu-export-replay` captures the UDP-flow packets into `web/replay.js`. |
 | Browser lab | `web/lab.html` replays captured packets and renders a MuJoCo-compatible orientation preview. |
+| 3D twin lab | `web/twin.html` renders source and response boxes connected by a live cable; the response body follows through a damped spring. |
 | E2E | Playwright checks desktop and mobile lab views, telemetry, canvas pixels, and controls. |
 | CI | GitHub Actions runs Python lint/tests and Playwright browser tests. |
 
@@ -34,6 +35,7 @@ No-hardware 10/10 means:
 - `imu-export-replay --output web/replay.js` regenerates the replay fixture.
 - `npm run test:e2e` passes locally and in CI.
 - README shows the demo video, browser lab screenshot, setup commands, and known limits.
+- 3D twin canvas is nonblank and verifies source/response placement in Playwright.
 
 Run all of that locally with:
 
