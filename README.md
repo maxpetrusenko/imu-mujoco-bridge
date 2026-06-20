@@ -68,14 +68,12 @@ Run the browser lab:
 ```sh
 python -m imu_mujoco_bridge.export_replay --output web/replay.js
 npm install
-export LAB_HOST="${LAB_HOST:-127.0.0.1}"
-export LAB_PORT="${LAB_PORT:-4173}"
-npm run serve -- --host "$LAB_HOST" --port "$LAB_PORT"
+scripts/lab
 ```
 
-Open `http://$LAB_HOST:$LAB_PORT/web/lab.html`.
+Use the printed base URL and open `/web/lab.html`.
 
-For the 3D synthetic twin, open `http://$LAB_HOST:$LAB_PORT/web/twin.html`.
+For the 3D synthetic twin, use the printed base URL and open `/web/twin.html`.
 
 Run the no-hardware end-to-end gate:
 
@@ -158,27 +156,27 @@ See `docs/SYNTHETIC_TEST_PLAN.md` for the no-hardware readiness matrix.
 
 ## 3D Twin Lab
 
-The 3D twin is the highest-signal no-hardware demo. It shows two linked bodies:
+The 3D twin is the highest-signal no-hardware demo. It shows a hardware-inspired
+ATOM Lite plus BNO055 source rig linked to a response body:
 
-![3D twin source and response boxes](docs/twin-screenshot.png)
+![3D twin source rig and response body](docs/twin-screenshot.png)
 
-- left source box: the virtual IMU stream;
+- left source rig: the virtual IMU stream;
 - cable: the UDP packet link, with moving pulses;
 - right response box: a damped spring body replying to the source movement.
 
 Run it locally:
 
 ```sh
-export LAB_HOST="${LAB_HOST:-127.0.0.1}"
-export LAB_PORT="${LAB_PORT:-4173}"
-npm run serve -- --host "$LAB_HOST" --port "$LAB_PORT"
+scripts/lab
 ```
 
-Open `http://$LAB_HOST:$LAB_PORT/web/twin.html`.
+Use the printed base URL and open `/web/twin.html`.
 
-The twin starts in replay mode. Use `Manual source` to control the left box
-directly with roll, pitch, and yaw sliders; the right box keeps responding
-through the same damped wire simulation.
+The twin starts in replay mode. Use `Manual source`, drag the scene for 360 yaw
+and pitch, use the mouse wheel for roll, or set exact roll, pitch, and yaw
+values with sliders. The right body keeps responding through the same damped
+wire simulation.
 
 ## Camera Marker Mode
 

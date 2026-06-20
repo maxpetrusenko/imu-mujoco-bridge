@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+LAB_HOST="${LAB_HOST:-127.0.0.1}"
+
+if [[ -z "${LAB_PORT:-}" ]]; then
+  LAB_PORT="$(
+    python3 - <<'PY'
+import socket
+
+for port in range(4173, 4200):
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as probe:
+        probe.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        try:
+            probe.bind(("127.0.0.1", port))
+        except OSError:
+            continue
+        print(port)
+        break
+else:
+    raise SystemExit("no free lab port in 4173..4199")
+PY
+  )"
+fi
+
+export LAB_HOST LAB_PORT
+
+printf 'Lab: http://%s:%s/web/twin.html\n' "$LAB_HOST" "$LAB_PORT"
+npm run serve -- --host "$LAB_HOST" --port "$LAB_PORT"

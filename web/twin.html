@@ -11,7 +11,7 @@
     <main class="hud" aria-label="twin telemetry">
       <section>
         <h1>IMU Twin Lab</h1>
-        <p>Source box drives packets. Response box follows through a damped physics link.</p>
+        <p>ATOM Lite plus BNO055 pose drives packets. Response body follows through a damped physics link.</p>
       </section>
       <dl>
         <div>
@@ -40,17 +40,17 @@
         <label>
           Roll
           <span id="source-roll-value">0 deg</span>
-          <input id="source-roll" type="range" min="-90" max="90" value="0" step="1" />
+          <input id="source-roll" type="range" min="-360" max="360" value="0" step="1" />
         </label>
         <label>
           Pitch
           <span id="source-pitch-value">0 deg</span>
-          <input id="source-pitch" type="range" min="-75" max="75" value="0" step="1" />
+          <input id="source-pitch" type="range" min="-360" max="360" value="0" step="1" />
         </label>
         <label>
           Yaw
           <span id="source-yaw-value">0 deg</span>
-          <input id="source-yaw" type="range" min="-180" max="180" value="0" step="1" />
+          <input id="source-yaw" type="range" min="-360" max="360" value="0" step="1" />
         </label>
       </section>
       <div class="controls">

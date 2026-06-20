@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { makeResponseRig, makeSourceRig } from "./twin-models.js";
 
 const replay = window.IMU_REPLAY || [];
 const canvas = document.getElementById("twin-scene");
@@ -25,6 +26,8 @@ const renderer = new THREE.WebGLRenderer({
 });
 renderer.setClearColor(0xf5efe2);
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFShadowMap;
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xf5efe2);
@@ -39,7 +42,13 @@ scene.add(hemi);
 
 const key = new THREE.DirectionalLight(0xffffff, 2.8);
 key.position.set(-3, 5, 4);
+key.castShadow = true;
+key.shadow.mapSize.set(1024, 1024);
 scene.add(key);
+
+const rim = new THREE.DirectionalLight(0xcde8ff, 1.2);
+rim.position.set(4, 2.4, -3);
+scene.add(rim);
 
 const floor = new THREE.Mesh(
   new THREE.PlaneGeometry(12, 7, 1, 1),
@@ -47,17 +56,18 @@ const floor = new THREE.Mesh(
 );
 floor.rotation.x = -Math.PI / 2;
 floor.position.y = -1.15;
+floor.receiveShadow = true;
 scene.add(floor);
 
 const grid = new THREE.GridHelper(12, 24, 0xb9ad98, 0xd7cbb7);
 grid.position.y = -1.14;
 scene.add(grid);
 
-const source = makeBox(0xd94f3d, "Source IMU");
+const source = makeSourceRig();
 source.group.position.set(-2.7, 0, 0);
 scene.add(source.group);
 
-const reply = makeBox(0x1f8f62, "Response Body");
+const reply = makeResponseRig();
 reply.group.position.set(0.85, 0, 0);
 scene.add(reply.group);
 
@@ -85,6 +95,7 @@ let frameIndex = 0;
 let playing = true;
 let manualSource = false;
 let previousTime = performance.now();
+const drag = { active: false, pointerId: null, x: 0, y: 0, rolling: false };
 const replyQuaternion = new THREE.Quaternion();
 const replyVelocity = new THREE.Vector3();
 const replyBase = new THREE.Vector3(0.85, 0, 0);
@@ -103,55 +114,6 @@ window.__TWIN_METRICS = {
   manualPitch: 0,
   manualYaw: 0,
 };
-
-function makeBox(color, label) {
-  const group = new THREE.Group();
-  const material = new THREE.MeshStandardMaterial({
-    color,
-    roughness: 0.52,
-    metalness: 0.05,
-  });
-  const body = new THREE.Mesh(new THREE.BoxGeometry(1.18, 0.5, 0.34), material);
-  body.castShadow = false;
-  group.add(body);
-
-  const edge = new THREE.LineSegments(
-    new THREE.EdgesGeometry(body.geometry),
-    new THREE.LineBasicMaterial({ color: 0x13203a })
-  );
-  group.add(edge);
-
-  const nose = new THREE.Mesh(
-    new THREE.BoxGeometry(0.32, 0.16, 0.18),
-    new THREE.MeshStandardMaterial({ color: 0x13203a, roughness: 0.6 })
-  );
-  nose.position.x = 0.75;
-  group.add(nose);
-
-  const sprite = makeLabel(label);
-  sprite.position.set(0, 0.62, 0);
-  group.add(sprite);
-  return { group, body };
-}
-
-function makeLabel(text) {
-  const labelCanvas = document.createElement("canvas");
-  labelCanvas.width = 256;
-  labelCanvas.height = 64;
-  const context = labelCanvas.getContext("2d");
-  context.fillStyle = "rgba(255, 250, 240, 0.86)";
-  context.fillRect(0, 0, labelCanvas.width, labelCanvas.height);
-  context.fillStyle = "#13203a";
-  context.font = "700 28px Avenir Next, sans-serif";
-  context.textAlign = "center";
-  context.textBaseline = "middle";
-  context.fillText(text, labelCanvas.width / 2, labelCanvas.height / 2);
-  const texture = new THREE.CanvasTexture(labelCanvas);
-  const material = new THREE.SpriteMaterial({ map: texture, transparent: true });
-  const sprite = new THREE.Sprite(material);
-  sprite.scale.set(1.5, 0.38, 1);
-  return sprite;
-}
 
 function quaternionFromSample(sample) {
   const [w, x, y, z] = sample.quaternion;
@@ -189,8 +151,8 @@ function manualQuaternion() {
 function manualSourcePosition() {
   return new THREE.Vector3(
     -2.7,
-    THREE.MathUtils.clamp(manual.pitch / 75, -1, 1) * 0.22,
-    THREE.MathUtils.clamp(manual.yaw / 180, -1, 1) * 0.3
+    Math.sin(THREE.MathUtils.degToRad(manual.pitch)) * 0.24,
+    Math.sin(THREE.MathUtils.degToRad(manual.yaw)) * 0.32
   );
 }
 
@@ -235,6 +197,9 @@ function updateControlLabels() {
   rollValue.textContent = `${manual.roll} deg`;
   pitchValue.textContent = `${manual.pitch} deg`;
   yawValue.textContent = `${manual.yaw} deg`;
+  rollInput.value = String(THREE.MathUtils.clamp(manual.roll, -360, 360));
+  pitchInput.value = String(THREE.MathUtils.clamp(manual.pitch, -360, 360));
+  yawInput.value = String(THREE.MathUtils.clamp(manual.yaw, -360, 360));
   sourceMode.textContent = manualSource ? "Auto replay" : "Manual source";
   toggle.textContent = manualSource ? "Play replay" : playing ? "Pause" : "Play";
 }
@@ -344,6 +309,57 @@ function bindControl(input, key) {
 bindControl(rollInput, "roll");
 bindControl(pitchInput, "pitch");
 bindControl(yawInput, "yaw");
+
+canvas.addEventListener("contextmenu", (event) => event.preventDefault());
+
+canvas.addEventListener("pointerdown", (event) => {
+  if (event.button > 2) return;
+  drag.active = true;
+  drag.pointerId = event.pointerId;
+  drag.x = event.clientX;
+  drag.y = event.clientY;
+  drag.rolling = event.shiftKey || event.altKey || event.button === 2;
+  canvas.setPointerCapture(event.pointerId);
+  setManualSource(true);
+  event.preventDefault();
+});
+
+canvas.addEventListener("pointermove", (event) => {
+  if (!drag.active || drag.pointerId !== event.pointerId) return;
+  const dx = event.clientX - drag.x;
+  const dy = event.clientY - drag.y;
+  drag.x = event.clientX;
+  drag.y = event.clientY;
+
+  if (drag.rolling || event.shiftKey || event.altKey) {
+    manual.roll = Math.round(manual.roll + dx * 0.8 + dy * 0.28);
+  } else {
+    manual.yaw = Math.round(manual.yaw + dx * 1.35);
+    manual.pitch = Math.round(manual.pitch + dy * 1.35);
+  }
+  setManualSource(true);
+});
+
+canvas.addEventListener("pointerup", (event) => {
+  if (drag.pointerId !== event.pointerId) return;
+  drag.active = false;
+  drag.pointerId = null;
+});
+
+canvas.addEventListener("pointercancel", () => {
+  drag.active = false;
+  drag.pointerId = null;
+});
+
+canvas.addEventListener(
+  "wheel",
+  (event) => {
+    manual.roll = Math.round(manual.roll + event.deltaY * 0.18);
+    setManualSource(true);
+    event.preventDefault();
+  },
+  { passive: false }
+);
 
 window.addEventListener("resize", resize);
 updateControlLabels();

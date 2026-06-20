@@ -4,7 +4,7 @@ test("3D twin shows linked source and response bodies", async ({ page }) => {
   await page.goto("/web/twin.html");
 
   await expect(page.getByRole("heading", { name: "IMU Twin Lab" })).toBeVisible();
-  await expect(page.getByText("Response box follows")).toBeVisible();
+  await expect(page.getByText("Response body follows")).toBeVisible();
 
   const canvas = page.locator("#twin-scene");
   await expect(canvas).toBeVisible();
@@ -77,4 +77,41 @@ test("3D twin lets a user control the source body", async ({ page }) => {
 
   await page.getByRole("button", { name: "Auto replay" }).click();
   await expect(page.locator("#twin-mode")).toHaveText("replay");
+});
+
+test("3D twin supports direct 360 pointer control", async ({ page }, testInfo) => {
+  await page.goto("/web/twin.html");
+  await page.waitForFunction(() => window.__TWIN_READY === true);
+
+  const canvas = page.locator("#twin-scene");
+  const box = await canvas.boundingBox();
+  expect(box).not.toBeNull();
+  const startX = box!.x + box!.width * 0.18;
+  const startY = box!.y + box!.height * 0.3;
+  const endX = box!.x + box!.width * 0.88;
+  const endY = box!.y + box!.height * 0.22;
+
+  await page.mouse.move(startX, startY);
+  await page.mouse.down();
+  await page.mouse.move(endX, endY, { steps: 18 });
+  await page.mouse.up();
+
+  await page.waitForFunction(
+    () =>
+      window.__TWIN_METRICS?.mode === "manual" &&
+      Math.abs(window.__TWIN_METRICS?.manualYaw ?? 0) >= 360
+  );
+
+  const draggedMetrics = await page.evaluate(() => window.__TWIN_METRICS);
+  expect(Math.abs(draggedMetrics.manualYaw)).toBeGreaterThanOrEqual(360);
+  expect(Math.abs(draggedMetrics.manualPitch)).toBeGreaterThan(20);
+
+  if (testInfo.project.name === "chromium") {
+    await page.mouse.move(startX, startY);
+    await page.mouse.wheel(0, 2400);
+    await page.waitForFunction(() => Math.abs(window.__TWIN_METRICS?.manualRoll ?? 0) >= 360);
+    const rolledMetrics = await page.evaluate(() => window.__TWIN_METRICS);
+    expect(Math.abs(rolledMetrics.manualRoll)).toBeGreaterThanOrEqual(360);
+    expect(rolledMetrics.rightX).toBeGreaterThan(0);
+  }
 });
