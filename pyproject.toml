@@ -1,0 +1,38 @@
+[build-system]
+requires = ["hatchling>=1.26"]
+build-backend = "hatchling.build"
+
+[project]
+name = "imu-mujoco-bridge"
+version = "0.1.0"
+description = "Stream BNO055 quaternion orientation packets into a MuJoCo model."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "Max Petrusenko" }]
+keywords = ["imu", "bno055", "mujoco", "quaternion", "robotics", "esp32"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Developers",
+  "Intended Audience :: Science/Research",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3",
+  "Topic :: Scientific/Engineering",
+]
+dependencies = []
+
+[project.optional-dependencies]
+mujoco = ["mujoco>=3.9.0", "numpy>=2.0.0"]
+dev = ["ruff>=0.12.0"]
+
+[project.scripts]
+imu-udp-dump = "imu_mujoco_bridge.udp:main"
+imu-mujoco-viewer = "imu_mujoco_bridge.mujoco_viewer:main"
+imu-sim-packets = "imu_mujoco_bridge.demo:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/imu_mujoco_bridge"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
