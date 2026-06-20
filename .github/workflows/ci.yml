@@ -27,6 +27,9 @@ jobs:
 
   browser-lab:
     runs-on: ubuntu-latest
+    env:
+      LAB_HOST: 127.0.0.1
+      LAB_PORT: 4173
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5

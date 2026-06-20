@@ -1,15 +1,19 @@
 import { defineConfig, devices } from "@playwright/test";
 
+const labHost = process.env.LAB_HOST || "127.0.0.1";
+const labPort = process.env.LAB_PORT || "4173";
+const labBaseURL = `http://${labHost}:${labPort}`;
+
 export default defineConfig({
   testDir: "./e2e",
   timeout: 30_000,
   use: {
-    baseURL: "http://127.0.0.1:4173",
+    baseURL: labBaseURL,
     trace: "on-first-retry"
   },
   webServer: {
-    command: "npm run serve",
-    url: "http://127.0.0.1:4173",
+    command: `npm run serve -- --host ${labHost} --port ${labPort}`,
+    url: `${labBaseURL}/web/twin.html`,
     reuseExistingServer: false,
     timeout: 10_000
   },

@@ -43,3 +43,38 @@ test("3D twin shows linked source and response bodies", async ({ page }) => {
   await expect(page.locator("#twin-packet")).not.toHaveText("waiting");
 });
 
+test("3D twin lets a user control the source body", async ({ page }) => {
+  await page.goto("/web/twin.html");
+  await page.waitForFunction(() => window.__TWIN_READY === true);
+
+  await page.getByRole("button", { name: "Manual source" }).click();
+  await expect(page.locator("#twin-mode")).toHaveText("manual");
+
+  await page.locator("#source-roll").fill("35");
+  await page.locator("#source-pitch").fill("-28");
+  await page.locator("#source-yaw").fill("62");
+
+  await page.waitForFunction(
+    () =>
+      window.__TWIN_METRICS?.mode === "manual" &&
+      window.__TWIN_METRICS?.manualRoll === 35 &&
+      window.__TWIN_METRICS?.manualPitch === -28 &&
+      window.__TWIN_METRICS?.manualYaw === 62
+  );
+
+  await expect(page.locator("#source-roll-value")).toHaveText("35 deg");
+  await expect(page.locator("#source-pitch-value")).toHaveText("-28 deg");
+  await expect(page.locator("#source-yaw-value")).toHaveText("62 deg");
+  await expect(page.locator("#twin-packet")).toContainText(",3,3,3,3,");
+
+  const manualMetrics = await page.evaluate(() => window.__TWIN_METRICS);
+  expect(manualMetrics.leftY).toBeLessThan(0);
+  expect(manualMetrics.leftZ).toBeGreaterThan(0);
+
+  await page.waitForFunction(() => Math.abs(window.__TWIN_METRICS?.rightZ ?? 0) > 0.01);
+  const respondingMetrics = await page.evaluate(() => window.__TWIN_METRICS);
+  expect(respondingMetrics.rightZ).toBeGreaterThan(0);
+
+  await page.getByRole("button", { name: "Auto replay" }).click();
+  await expect(page.locator("#twin-mode")).toHaveText("replay");
+});

@@ -1,13 +1,21 @@
-import * as THREE from "../node_modules/three/build/three.module.js";
+import * as THREE from "three";
 
 const replay = window.IMU_REPLAY || [];
 const canvas = document.getElementById("twin-scene");
 const frameEl = document.getElementById("twin-frame");
 const lagEl = document.getElementById("twin-lag");
 const springEl = document.getElementById("twin-spring");
+const modeEl = document.getElementById("twin-mode");
 const packetEl = document.getElementById("twin-packet");
 const toggle = document.getElementById("twin-toggle");
 const reset = document.getElementById("twin-reset");
+const sourceMode = document.getElementById("source-mode");
+const rollInput = document.getElementById("source-roll");
+const pitchInput = document.getElementById("source-pitch");
+const yawInput = document.getElementById("source-yaw");
+const rollValue = document.getElementById("source-roll-value");
+const pitchValue = document.getElementById("source-pitch-value");
+const yawValue = document.getElementById("source-yaw-value");
 
 const renderer = new THREE.WebGLRenderer({
   canvas,
@@ -75,11 +83,13 @@ scene.add(replyPulse);
 
 let frameIndex = 0;
 let playing = true;
+let manualSource = false;
 let previousTime = performance.now();
 const replyQuaternion = new THREE.Quaternion();
 const replyVelocity = new THREE.Vector3();
 const replyBase = new THREE.Vector3(0.85, 0, 0);
 const targetPosition = new THREE.Vector3();
+const manual = { roll: 0, pitch: 0, yaw: 0 };
 
 window.__TWIN_READY = false;
 window.__TWIN_METRICS = {
@@ -88,6 +98,10 @@ window.__TWIN_METRICS = {
   springEnergy: 0,
   leftX: source.group.position.x,
   rightX: reply.group.position.x,
+  mode: "replay",
+  manualRoll: 0,
+  manualPitch: 0,
+  manualYaw: 0,
 };
 
 function makeBox(color, label) {
@@ -161,6 +175,41 @@ function sourcePosition(sample) {
   );
 }
 
+function manualQuaternion() {
+  return new THREE.Quaternion().setFromEuler(
+    new THREE.Euler(
+      THREE.MathUtils.degToRad(manual.roll),
+      THREE.MathUtils.degToRad(manual.pitch),
+      THREE.MathUtils.degToRad(manual.yaw),
+      "XYZ"
+    )
+  );
+}
+
+function manualSourcePosition() {
+  return new THREE.Vector3(
+    -2.7,
+    THREE.MathUtils.clamp(manual.pitch / 75, -1, 1) * 0.22,
+    THREE.MathUtils.clamp(manual.yaw / 180, -1, 1) * 0.3
+  );
+}
+
+function manualPacket(quaternion) {
+  return [
+    quaternion.w,
+    quaternion.x,
+    quaternion.y,
+    quaternion.z,
+    3,
+    3,
+    3,
+    3,
+    Math.round(performance.now()),
+  ]
+    .map((value) => (Number.isInteger(value) ? value : value.toFixed(6)))
+    .join(",");
+}
+
 function updateCable(progress) {
   const left = source.group.position.clone().add(new THREE.Vector3(0.7, 0, 0));
   const right = reply.group.position.clone().add(new THREE.Vector3(-0.7, 0, 0));
@@ -174,11 +223,26 @@ function updateCable(progress) {
   replyPulse.position.copy(curve.getPoint(1 - ((progress * 0.62 + 0.18) % 1)));
 }
 
-function updateHud(sample, lagDegrees, springEnergy) {
-  frameEl.textContent = `${sample.index + 1}/${replay.length}`;
+function updateHud({ frameText, lagDegrees, springEnergy, packetText, mode }) {
+  frameEl.textContent = frameText;
   lagEl.textContent = `${lagDegrees.toFixed(1)} deg`;
   springEl.textContent = springEnergy.toFixed(2);
-  packetEl.textContent = sample.csv;
+  modeEl.textContent = mode;
+  packetEl.textContent = packetText;
+}
+
+function updateControlLabels() {
+  rollValue.textContent = `${manual.roll} deg`;
+  pitchValue.textContent = `${manual.pitch} deg`;
+  yawValue.textContent = `${manual.yaw} deg`;
+  sourceMode.textContent = manualSource ? "Auto replay" : "Manual source";
+  toggle.textContent = manualSource ? "Play replay" : playing ? "Pause" : "Play";
+}
+
+function setManualSource(enabled) {
+  manualSource = enabled;
+  playing = !enabled;
+  updateControlLabels();
 }
 
 function step(now) {
@@ -191,9 +255,10 @@ function step(now) {
 
   const sample = replay[frameIndex] || replay[0];
   if (sample) {
-    const sourceQuaternion = quaternionFromSample(sample);
+    const sourceQuaternion = manualSource ? manualQuaternion() : quaternionFromSample(sample);
+    const sourceTargetPosition = manualSource ? manualSourcePosition() : sourcePosition(sample);
     source.group.quaternion.copy(sourceQuaternion);
-    source.group.position.copy(sourcePosition(sample));
+    source.group.position.copy(sourceTargetPosition);
 
     const followStrength = 1 - Math.exp(-dt * 5.5);
     replyQuaternion.slerp(sourceQuaternion, followStrength);
@@ -209,9 +274,16 @@ function step(now) {
 
     const lagDegrees = THREE.MathUtils.radToDeg(replyQuaternion.angleTo(sourceQuaternion));
     const springEnergy = displacement.length() * 10 + replyVelocity.length();
-    const progress = ((sample.timestampMs / 1000) * 1.8) % 1;
+    const progress = manualSource ? (now / 1000) % 1 : ((sample.timestampMs / 1000) * 1.8) % 1;
     updateCable(progress);
-    updateHud(sample, lagDegrees, springEnergy);
+    const mode = manualSource ? "manual" : "replay";
+    updateHud({
+      frameText: manualSource ? "manual" : `${sample.index + 1}/${replay.length}`,
+      lagDegrees,
+      springEnergy,
+      packetText: manualSource ? manualPacket(sourceQuaternion) : sample.csv,
+      mode,
+    });
 
     window.__TWIN_READY = true;
     window.__TWIN_METRICS = {
@@ -220,6 +292,14 @@ function step(now) {
       springEnergy,
       leftX: source.group.position.x,
       rightX: reply.group.position.x,
+      leftY: source.group.position.y,
+      leftZ: source.group.position.z,
+      rightY: reply.group.position.y,
+      rightZ: reply.group.position.z,
+      mode,
+      manualRoll: manual.roll,
+      manualPitch: manual.pitch,
+      manualYaw: manual.yaw,
     };
   }
 
@@ -228,8 +308,12 @@ function step(now) {
 }
 
 toggle.addEventListener("click", () => {
+  if (manualSource) {
+    setManualSource(false);
+    return;
+  }
   playing = !playing;
-  toggle.textContent = playing ? "Pause" : "Play";
+  updateControlLabels();
 });
 
 reset.addEventListener("click", () => {
@@ -237,8 +321,31 @@ reset.addEventListener("click", () => {
   reply.group.position.copy(replyBase);
   replyVelocity.set(0, 0, 0);
   replyQuaternion.identity();
+  manual.roll = 0;
+  manual.pitch = 0;
+  manual.yaw = 0;
+  rollInput.value = "0";
+  pitchInput.value = "0";
+  yawInput.value = "0";
+  updateControlLabels();
 });
 
+sourceMode.addEventListener("click", () => {
+  setManualSource(!manualSource);
+});
+
+function bindControl(input, key) {
+  input.addEventListener("input", () => {
+    manual[key] = Number(input.value);
+    setManualSource(true);
+  });
+}
+
+bindControl(rollInput, "roll");
+bindControl(pitchInput, "pitch");
+bindControl(yawInput, "yaw");
+
 window.addEventListener("resize", resize);
+updateControlLabels();
 resize();
 requestAnimationFrame(step);

@@ -1,8 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+: "${LAB_HOST:=127.0.0.1}"
+: "${LAB_PORT:=4173}"
+export LAB_HOST LAB_PORT
+
 ruff check .
 PYTHONPATH=src python3 -m unittest discover -s tests
 PYTHONPATH=src python3 -m imu_mujoco_bridge.export_replay --output web/replay.js
 npm run test:e2e
-

@@ -27,10 +27,32 @@
           <dd id="twin-spring">0.00</dd>
         </div>
         <div>
+          <dt>Mode</dt>
+          <dd id="twin-mode">replay</dd>
+        </div>
+        <div>
           <dt>Packet</dt>
           <dd><code id="twin-packet">waiting</code></dd>
         </div>
       </dl>
+      <section class="source-controls" aria-label="source controls">
+        <button id="source-mode" type="button">Manual source</button>
+        <label>
+          Roll
+          <span id="source-roll-value">0 deg</span>
+          <input id="source-roll" type="range" min="-90" max="90" value="0" step="1" />
+        </label>
+        <label>
+          Pitch
+          <span id="source-pitch-value">0 deg</span>
+          <input id="source-pitch" type="range" min="-75" max="75" value="0" step="1" />
+        </label>
+        <label>
+          Yaw
+          <span id="source-yaw-value">0 deg</span>
+          <input id="source-yaw" type="range" min="-180" max="180" value="0" step="1" />
+        </label>
+      </section>
       <div class="controls">
         <button id="twin-toggle" type="button">Pause</button>
         <button id="twin-reset" type="button">Reset</button>
@@ -40,4 +62,3 @@
     <script type="module" src="./twin.js"></script>
   </body>
 </html>
-
