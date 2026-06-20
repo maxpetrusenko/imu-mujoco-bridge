@@ -27,6 +27,8 @@ This repo should be a small open source bridge, not a one-off video clone:
 - UDP packet contract documented and tested.
 - Python receiver that can print packets.
 - MuJoCo viewer that can run from real UDP or simulated packets.
+- Virtual ATOM Lite plus BNO055 sender that uses the same UDP path as real hardware.
+- Camera-marker pose source so people can get an IRL demo with a webcam and printed marker.
 - Simulated packet generator so contributors can verify the repo without hardware.
 
 ## Non-Goals
@@ -34,4 +36,3 @@ This repo should be a small open source bridge, not a one-off video clone:
 - Full sensor fusion implementation. BNO055 does this on-chip.
 - Browser-only clone. The point is a live MuJoCo model.
 - Hardware-specific calibration wizard. Calibration values are exposed so users can build that later.
-

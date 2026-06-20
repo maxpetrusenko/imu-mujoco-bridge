@@ -23,9 +23,13 @@ dependencies = []
 
 [project.optional-dependencies]
 mujoco = ["mujoco>=3.9.0", "numpy>=2.0.0"]
+camera = ["opencv-contrib-python>=4.13.0.92"]
 dev = ["ruff>=0.12.0"]
 
 [project.scripts]
+imu-camera-marker = "imu_mujoco_bridge.camera_marker:main"
+imu-flow-demo = "imu_mujoco_bridge.flow_demo:main"
+imu-virtual-device = "imu_mujoco_bridge.virtual_device:main"
 imu-udp-dump = "imu_mujoco_bridge.udp:main"
 imu-mujoco-viewer = "imu_mujoco_bridge.mujoco_viewer:main"
 imu-sim-packets = "imu_mujoco_bridge.demo:main"

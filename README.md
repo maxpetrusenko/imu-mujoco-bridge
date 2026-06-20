@@ -10,6 +10,12 @@ This repeats the useful part of the referenced demo: an M5 ATOM Lite reads a
 BNO055 IMU, sends quaternion packets over UDP, and a PC uses those packets to
 rotate a MuJoCo body in real time.
 
+The same receiver path can run from three sources:
+
+- `imu-virtual-device`: simulated ATOM Lite plus BNO055, over real UDP.
+- `firmware/`: real ATOM Lite plus BNO055, over real UDP.
+- `imu-camera-marker`: webcam ArUco marker pose, converted to the same quaternion UDP packets.
+
 ## Why
 
 For all-direction orientation, use quaternions from a 9-axis absolute-orientation
@@ -60,7 +66,7 @@ PYTHONPATH=src python -m unittest discover -s tests
 Render the hardware-free imitation video:
 
 ```sh
-imu-render-demo --output docs/demo.mp4
+imu-flow-demo --output docs/demo.mp4 --poster docs/demo-poster.png
 ```
 
 This command uses `ffmpeg`.
@@ -71,6 +77,68 @@ Optional MuJoCo viewer:
 python -m pip install -e '.[mujoco]'
 imu-mujoco-viewer --simulate
 ```
+
+## Closer-To-Reality Simulation
+
+For a full flow imitation without hardware, run a virtual device that behaves
+like the original X setup:
+
+```sh
+imu-virtual-device --host 127.0.0.1 --port 5005 --rate-hz 60
+```
+
+In another terminal:
+
+```sh
+imu-udp-dump --host 127.0.0.1 --port 5005
+```
+
+The virtual device simulates:
+
+- BNO055 quaternion packets.
+- Calibration ramp from `0,0,0,0` to `3,3,3,3`.
+- Optional quaternion noise with `--noise`.
+- Optional packet loss with `--drop-rate`.
+- Optional Wi-Fi timing jitter with `--jitter-ms`.
+
+To regenerate the README video from the actual UDP sender/receiver path:
+
+```sh
+imu-flow-demo --output docs/demo.mp4 --poster docs/demo-poster.png
+```
+
+## Camera Marker Mode
+
+Camera mode is useful when you want an IRL demo without IMU hardware. Print or
+display an ArUco marker, point a webcam at it, and the marker pose is converted
+to the same quaternion UDP stream.
+
+Install optional camera support:
+
+```sh
+python -m pip install -e '.[camera]'
+```
+
+Generate a marker:
+
+```sh
+imu-camera-marker --make-marker docs/aruco-4x4-id0.png --marker-id 0
+```
+
+Stream marker pose:
+
+```sh
+imu-camera-marker --host 127.0.0.1 --port 5005 --marker-id 0 --show
+```
+
+Then run the same receiver:
+
+```sh
+imu-mujoco-viewer --port 5005
+```
+
+Camera mode uses approximate camera intrinsics by default. For measurement-grade
+pose, calibrate the webcam and pass a real focal length with `--focal-px`.
 
 ## Run With Hardware
 

@@ -36,6 +36,16 @@ class QuaternionPacket:
         q = self.normalized()
         return (q.w, q.x, q.y, q.z)
 
+    def as_csv(self) -> str:
+        q = self.normalized()
+        parts = [q.w, q.x, q.y, q.z]
+        text_parts = [f"{value:.6f}" for value in parts]
+        if self.calibration is not None:
+            text_parts.extend(str(value) for value in self.calibration)
+        if self.timestamp_ms is not None:
+            text_parts.append(str(self.timestamp_ms))
+        return ",".join(text_parts)
+
 
 def parse_packet(payload: bytes | str) -> QuaternionPacket:
     text = payload.decode("utf-8") if isinstance(payload, bytes) else payload
@@ -112,4 +122,3 @@ def _calibration_from_json(data: dict[str, object]) -> tuple[int, int, int, int]
     if isinstance(calibration, list | tuple) and len(calibration) == 4:
         return tuple(int(value) for value in calibration)  # type: ignore[return-value]
     return None
-

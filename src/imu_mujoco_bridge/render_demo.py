@@ -6,6 +6,7 @@ from pathlib import Path
 import shutil
 import subprocess
 import tempfile
+from collections.abc import Sequence
 
 from .demo import simulated_packet_at
 from .packet import QuaternionPacket
@@ -146,16 +147,26 @@ def ppm_bytes(pixels: bytearray, width: int, height: int) -> bytes:
 
 
 def render_demo_video(output: Path, width: int, height: int, fps: int, seconds: float) -> None:
+    packets = [simulated_packet_at(frame / fps) for frame in range(int(fps * seconds))]
+    render_demo_video_from_packets(output=output, packets=packets, width=width, height=height, fps=fps)
+
+
+def render_demo_video_from_packets(
+    output: Path,
+    packets: Sequence[QuaternionPacket],
+    width: int,
+    height: int,
+    fps: int,
+    poster: Path | None = None,
+) -> None:
     ffmpeg = shutil.which("ffmpeg")
     if not ffmpeg:
         raise SystemExit("ffmpeg is required to render the demo video")
 
     output.parent.mkdir(parents=True, exist_ok=True)
-    frame_count = int(fps * seconds)
     with tempfile.TemporaryDirectory(prefix="imu-demo-frames-") as tmp:
         frame_dir = Path(tmp)
-        for frame in range(frame_count):
-            packet = simulated_packet_at(frame / fps)
+        for frame, packet in enumerate(packets):
             frame_path = frame_dir / f"frame-{frame:04d}.ppm"
             frame_path.write_bytes(render_frame(packet, width, height))
 
@@ -175,6 +186,31 @@ def render_demo_video(output: Path, width: int, height: int, fps: int, seconds: 
             ],
             check=True,
         )
+    if poster is not None:
+        render_poster(video=output, output=poster)
+
+
+def render_poster(video: Path, output: Path) -> None:
+    ffmpeg = shutil.which("ffmpeg")
+    if not ffmpeg:
+        raise SystemExit("ffmpeg is required to render the poster")
+    output.parent.mkdir(parents=True, exist_ok=True)
+    subprocess.run(
+        [
+            ffmpeg,
+            "-y",
+            "-ss",
+            "00:00:00.1",
+            "-i",
+            str(video),
+            "-frames:v",
+            "1",
+            "-update",
+            "1",
+            str(output),
+        ],
+        check=True,
+    )
 
 
 def main() -> None:
@@ -184,8 +220,11 @@ def main() -> None:
     parser.add_argument("--height", type=int, default=540)
     parser.add_argument("--fps", type=int, default=30)
     parser.add_argument("--seconds", type=float, default=4.0)
+    parser.add_argument("--poster", type=Path)
     args = parser.parse_args()
     render_demo_video(args.output, args.width, args.height, args.fps, args.seconds)
+    if args.poster:
+        render_poster(args.output, args.poster)
 
 
 if __name__ == "__main__":
