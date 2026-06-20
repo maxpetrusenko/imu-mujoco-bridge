@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>IMU MuJoCo Bridge Lab</title>
+    <link rel="stylesheet" href="./lab.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <section class="stage" aria-label="replay stage">
+        <canvas id="scene" width="960" height="540" aria-label="orientation replay canvas"></canvas>
+      </section>
+      <aside class="panel" aria-label="telemetry panel">
+        <h1>IMU MuJoCo Bridge Lab</h1>
+        <p class="lede">Virtual ATOM Lite + BNO055 replay, captured through the same UDP packet contract.</p>
+        <div class="stats">
+          <div><span>Frame</span><strong id="frame">0</strong></div>
+          <div><span>Time</span><strong id="time">0 ms</strong></div>
+          <div><span>Calibration</span><strong id="calibration">0,0,0,0</strong></div>
+          <div><span>Packet</span><code id="packet">waiting</code></div>
+        </div>
+        <div class="controls">
+          <button id="toggle" type="button">Pause</button>
+          <button id="step" type="button">Step</button>
+          <button id="reset" type="button">Reset</button>
+        </div>
+        <label class="scrub">
+          Replay frame
+          <input id="scrubber" type="range" min="0" max="1" value="0" />
+        </label>
+        <ol class="flow">
+          <li>Virtual BNO055 quaternion</li>
+          <li>UDP packet capture</li>
+          <li>Browser replay harness</li>
+          <li>MuJoCo-compatible orientation</li>
+        </ol>
+      </aside>
+    </main>
+    <script src="./replay.js"></script>
+    <script src="./lab.js"></script>
+  </body>
+</html>
+

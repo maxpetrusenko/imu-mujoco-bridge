@@ -1,0 +1,143 @@
+:root {
+  --paper: #f3efe4;
+  --ink: #17243d;
+  --muted: #667085;
+  --line: #d7cebb;
+  --accent: #d94f3d;
+  --green: #22945e;
+  --panel: #fffaf0;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  color: var(--ink);
+  background:
+    radial-gradient(circle at 22% 8%, rgba(217, 79, 61, 0.13), transparent 22rem),
+    linear-gradient(135deg, #f9f4e8 0%, #ece2cf 100%);
+  font-family: "Avenir Next", "Gill Sans", sans-serif;
+}
+
+.shell {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 360px;
+  gap: 24px;
+  min-height: 100vh;
+  padding: 24px;
+}
+
+.stage {
+  min-width: 0;
+  display: grid;
+  align-items: center;
+}
+
+canvas {
+  width: 100%;
+  max-height: calc(100vh - 48px);
+  aspect-ratio: 16 / 9;
+  border: 1px solid var(--line);
+  background: var(--paper);
+}
+
+.panel {
+  align-self: center;
+  padding: 22px;
+  border: 1px solid var(--line);
+  background: color-mix(in srgb, var(--panel), white 18%);
+}
+
+h1 {
+  margin: 0 0 8px;
+  font-size: 28px;
+  line-height: 1.05;
+  letter-spacing: 0;
+}
+
+.lede {
+  margin: 0 0 18px;
+  color: var(--muted);
+  line-height: 1.4;
+}
+
+.stats {
+  display: grid;
+  gap: 10px;
+}
+
+.stats div {
+  display: grid;
+  gap: 4px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--line);
+}
+
+span,
+.scrub {
+  color: var(--muted);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+strong,
+code {
+  font-size: 16px;
+}
+
+code {
+  overflow-wrap: anywhere;
+}
+
+.controls {
+  display: flex;
+  gap: 8px;
+  margin: 18px 0;
+}
+
+button {
+  height: 38px;
+  border: 1px solid var(--ink);
+  background: var(--ink);
+  color: white;
+  padding: 0 14px;
+  font: inherit;
+  cursor: pointer;
+}
+
+button:nth-child(n + 2) {
+  background: transparent;
+  color: var(--ink);
+}
+
+.scrub {
+  display: grid;
+  gap: 8px;
+}
+
+input[type="range"] {
+  width: 100%;
+  accent-color: var(--accent);
+}
+
+.flow {
+  margin: 18px 0 0;
+  padding-left: 20px;
+  line-height: 1.65;
+}
+
+@media (max-width: 820px) {
+  .shell {
+    grid-template-columns: 1fr;
+    padding: 14px;
+  }
+
+  .panel {
+    align-self: auto;
+  }
+}
+

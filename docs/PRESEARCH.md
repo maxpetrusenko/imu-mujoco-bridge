@@ -30,6 +30,7 @@ This repo should be a small open source bridge, not a one-off video clone:
 - Virtual ATOM Lite plus BNO055 sender that uses the same UDP path as real hardware.
 - Camera-marker pose source so people can get an IRL demo with a webcam and printed marker.
 - Simulated packet generator so contributors can verify the repo without hardware.
+- Browser lab with Playwright proof so CI can validate visual replay without hardware.
 
 ## Non-Goals
 

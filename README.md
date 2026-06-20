@@ -63,6 +63,28 @@ python -m imu_mujoco_bridge.demo --packets 3
 PYTHONPATH=src python -m unittest discover -s tests
 ```
 
+Run the browser lab:
+
+```sh
+python -m imu_mujoco_bridge.export_replay --output web/replay.js
+npm install
+npm run serve
+```
+
+Open `http://127.0.0.1:4173/web/lab.html`.
+
+Run the no-hardware end-to-end gate:
+
+```sh
+npm run test:e2e
+```
+
+Or run the full synthetic gate:
+
+```sh
+scripts/verify
+```
+
 Render the hardware-free imitation video:
 
 ```sh
@@ -106,6 +128,29 @@ To regenerate the README video from the actual UDP sender/receiver path:
 ```sh
 imu-flow-demo --output docs/demo.mp4 --poster docs/demo-poster.png
 ```
+
+## Browser Lab
+
+The browser lab is the CI-friendly proof environment. It uses a replay fixture
+generated from the virtual ATOM/BNO055 UDP loopback and verifies the visual path
+with Playwright.
+
+![Browser lab replay screenshot](docs/lab-screenshot.png)
+
+```sh
+imu-export-replay --output web/replay.js
+npm run test:e2e
+```
+
+Playwright checks:
+
+- lab page loads on desktop and mobile viewports;
+- telemetry shows captured CSV packets;
+- the canvas is nonblank;
+- pause, step, reset, and scrub controls work;
+- calibration starts at `0,0,0,0`.
+
+See `docs/SYNTHETIC_TEST_PLAN.md` for the no-hardware readiness matrix.
 
 ## Camera Marker Mode
 

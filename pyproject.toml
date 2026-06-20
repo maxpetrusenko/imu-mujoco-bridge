@@ -28,6 +28,7 @@ dev = ["ruff>=0.12.0"]
 
 [project.scripts]
 imu-camera-marker = "imu_mujoco_bridge.camera_marker:main"
+imu-export-replay = "imu_mujoco_bridge.export_replay:main"
 imu-flow-demo = "imu_mujoco_bridge.flow_demo:main"
 imu-virtual-device = "imu_mujoco_bridge.virtual_device:main"
 imu-udp-dump = "imu_mujoco_bridge.udp:main"

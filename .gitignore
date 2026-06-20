@@ -8,6 +8,9 @@ __pycache__/
 .ruff_cache/
 dist/
 build/
+node_modules/
+playwright-report/
+test-results/
 .env
 firmware/include/config.h
 .agents/

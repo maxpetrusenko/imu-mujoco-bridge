@@ -1,0 +1,13 @@
+{
+  "name": "imu-mujoco-bridge-lab",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test:e2e": "playwright test",
+    "serve": "python3 -m http.server 4173 --bind 127.0.0.1"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.57.0"
+  }
+}
+
