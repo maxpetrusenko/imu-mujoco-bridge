@@ -158,13 +158,19 @@ button:hover {
   transform: translateY(-1px);
 }
 
-button + button {
+.controls button + button {
   background: transparent;
   color: var(--ink);
 }
 
-#source-mode {
+#source-mode,
+#transform-mode {
   width: 100%;
+}
+
+#transform-mode {
+  background: transparent;
+  color: var(--ink);
 }
 
 @media (max-width: 820px) {

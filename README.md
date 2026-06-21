@@ -176,9 +176,10 @@ scripts/lab
 Use the printed base URL and open `/web/twin.html`.
 
 The twin starts in replay mode. Use `Manual source`, drag the scene for 360 yaw
-and pitch, use the mouse wheel for roll, or set exact roll, pitch, and yaw
-values with sliders. The right body keeps responding through the same damped
-wire simulation.
+and pitch, use the mouse wheel for roll, or switch to `Move source` and drag to
+move up/down and forward/backward in 3D space. Exact pose and position sliders
+are also available. The right body keeps responding through the same damped wire
+simulation and matches the source Y/Z position while staying on its own side.
 
 Record the direct-control video:
 

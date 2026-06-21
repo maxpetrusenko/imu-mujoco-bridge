@@ -52,6 +52,18 @@ const videoDir = process.argv[3];
   );
   await page.waitForTimeout(1200);
 
+  await page.getByRole("button", { name: "Move source" }).click();
+  await page.mouse.move(startX, startY);
+  await page.mouse.down();
+  await page.mouse.move(startX + 150, startY - 120, { steps: 35 });
+  await page.mouse.up();
+  await page.waitForFunction(
+    () =>
+      (window.__TWIN_METRICS?.manualUp ?? 0) > 0.5 &&
+      (window.__TWIN_METRICS?.manualForward ?? 0) > 0.5
+  );
+  await page.waitForTimeout(1200);
+
   await page.getByRole("button", { name: "Auto replay" }).click();
   await page.waitForTimeout(1200);
   await context.close();

@@ -11,12 +11,17 @@ const packetEl = document.getElementById("twin-packet");
 const toggle = document.getElementById("twin-toggle");
 const reset = document.getElementById("twin-reset");
 const sourceMode = document.getElementById("source-mode");
+const transformMode = document.getElementById("transform-mode");
 const rollInput = document.getElementById("source-roll");
 const pitchInput = document.getElementById("source-pitch");
 const yawInput = document.getElementById("source-yaw");
+const upInput = document.getElementById("source-up");
+const forwardInput = document.getElementById("source-forward");
 const rollValue = document.getElementById("source-roll-value");
 const pitchValue = document.getElementById("source-pitch-value");
 const yawValue = document.getElementById("source-yaw-value");
+const upValue = document.getElementById("source-up-value");
+const forwardValue = document.getElementById("source-forward-value");
 
 const renderer = new THREE.WebGLRenderer({
   canvas,
@@ -95,12 +100,13 @@ let frameIndex = 0;
 let playing = true;
 let manualSource = false;
 let previousTime = performance.now();
+let sourceTransformMode = "rotate";
 const drag = { active: false, pointerId: null, x: 0, y: 0, rolling: false };
 const replyQuaternion = new THREE.Quaternion();
 const replyVelocity = new THREE.Vector3();
 const replyBase = new THREE.Vector3(0.85, 0, 0);
 const targetPosition = new THREE.Vector3();
-const manual = { roll: 0, pitch: 0, yaw: 0 };
+const manual = { roll: 0, pitch: 0, yaw: 0, up: 0, forward: 0 };
 
 window.__TWIN_READY = false;
 window.__TWIN_METRICS = {
@@ -113,6 +119,8 @@ window.__TWIN_METRICS = {
   manualRoll: 0,
   manualPitch: 0,
   manualYaw: 0,
+  manualUp: 0,
+  manualForward: 0,
 };
 
 function quaternionFromSample(sample) {
@@ -149,11 +157,7 @@ function manualQuaternion() {
 }
 
 function manualSourcePosition() {
-  return new THREE.Vector3(
-    -2.7,
-    Math.sin(THREE.MathUtils.degToRad(manual.pitch)) * 0.24,
-    Math.sin(THREE.MathUtils.degToRad(manual.yaw)) * 0.32
-  );
+  return new THREE.Vector3(-2.7, manual.up, manual.forward);
 }
 
 function manualPacket(quaternion) {
@@ -197,10 +201,15 @@ function updateControlLabels() {
   rollValue.textContent = `${manual.roll} deg`;
   pitchValue.textContent = `${manual.pitch} deg`;
   yawValue.textContent = `${manual.yaw} deg`;
+  upValue.textContent = manual.up.toFixed(2);
+  forwardValue.textContent = manual.forward.toFixed(2);
   rollInput.value = String(THREE.MathUtils.clamp(manual.roll, -360, 360));
   pitchInput.value = String(THREE.MathUtils.clamp(manual.pitch, -360, 360));
   yawInput.value = String(THREE.MathUtils.clamp(manual.yaw, -360, 360));
+  upInput.value = String(THREE.MathUtils.clamp(manual.up, -1.2, 1.2));
+  forwardInput.value = String(THREE.MathUtils.clamp(manual.forward, -1.2, 1.2));
   sourceMode.textContent = manualSource ? "Auto replay" : "Manual source";
+  transformMode.textContent = sourceTransformMode === "rotate" ? "Move source" : "Rotate source";
   toggle.textContent = manualSource ? "Play replay" : playing ? "Pause" : "Play";
 }
 
@@ -230,8 +239,8 @@ function step(now) {
     reply.group.quaternion.copy(replyQuaternion);
 
     targetPosition.copy(replyBase);
-    targetPosition.y = source.group.position.y * 0.72;
-    targetPosition.z = source.group.position.z * 0.72;
+    targetPosition.y = source.group.position.y;
+    targetPosition.z = source.group.position.z;
     const displacement = targetPosition.clone().sub(reply.group.position);
     replyVelocity.addScaledVector(displacement, 18 * dt);
     replyVelocity.multiplyScalar(Math.max(0, 1 - 4.2 * dt));
@@ -265,6 +274,8 @@ function step(now) {
       manualRoll: manual.roll,
       manualPitch: manual.pitch,
       manualYaw: manual.yaw,
+      manualUp: manual.up,
+      manualForward: manual.forward,
     };
   }
 
@@ -289,14 +300,23 @@ reset.addEventListener("click", () => {
   manual.roll = 0;
   manual.pitch = 0;
   manual.yaw = 0;
+  manual.up = 0;
+  manual.forward = 0;
   rollInput.value = "0";
   pitchInput.value = "0";
   yawInput.value = "0";
+  upInput.value = "0";
+  forwardInput.value = "0";
   updateControlLabels();
 });
 
 sourceMode.addEventListener("click", () => {
   setManualSource(!manualSource);
+});
+
+transformMode.addEventListener("click", () => {
+  sourceTransformMode = sourceTransformMode === "rotate" ? "move" : "rotate";
+  setManualSource(true);
 });
 
 function bindControl(input, key) {
@@ -309,6 +329,8 @@ function bindControl(input, key) {
 bindControl(rollInput, "roll");
 bindControl(pitchInput, "pitch");
 bindControl(yawInput, "yaw");
+bindControl(upInput, "up");
+bindControl(forwardInput, "forward");
 
 canvas.addEventListener("contextmenu", (event) => event.preventDefault());
 
@@ -318,7 +340,7 @@ canvas.addEventListener("pointerdown", (event) => {
   drag.pointerId = event.pointerId;
   drag.x = event.clientX;
   drag.y = event.clientY;
-  drag.rolling = event.shiftKey || event.altKey || event.button === 2;
+  drag.rolling = sourceTransformMode === "rotate" && (event.shiftKey || event.altKey || event.button === 2);
   canvas.setPointerCapture(event.pointerId);
   setManualSource(true);
   event.preventDefault();
@@ -331,7 +353,10 @@ canvas.addEventListener("pointermove", (event) => {
   drag.x = event.clientX;
   drag.y = event.clientY;
 
-  if (drag.rolling || event.shiftKey || event.altKey) {
+  if (sourceTransformMode === "move") {
+    manual.forward = clampPosition(manual.forward + dx * 0.006);
+    manual.up = clampPosition(manual.up - dy * 0.006);
+  } else if (drag.rolling || event.shiftKey || event.altKey) {
     manual.roll = Math.round(manual.roll + dx * 0.8 + dy * 0.28);
   } else {
     manual.yaw = Math.round(manual.yaw + dx * 1.35);
@@ -339,6 +364,10 @@ canvas.addEventListener("pointermove", (event) => {
   }
   setManualSource(true);
 });
+
+function clampPosition(value) {
+  return Number(THREE.MathUtils.clamp(value, -1.2, 1.2).toFixed(2));
+}
 
 canvas.addEventListener("pointerup", (event) => {
   if (drag.pointerId !== event.pointerId) return;

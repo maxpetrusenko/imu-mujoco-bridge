@@ -37,6 +37,7 @@
       </dl>
       <section class="source-controls" aria-label="source controls">
         <button id="source-mode" type="button">Manual source</button>
+        <button id="transform-mode" type="button">Move source</button>
         <label>
           Roll
           <span id="source-roll-value">0 deg</span>
@@ -51,6 +52,16 @@
           Yaw
           <span id="source-yaw-value">0 deg</span>
           <input id="source-yaw" type="range" min="-360" max="360" value="0" step="1" />
+        </label>
+        <label>
+          Up
+          <span id="source-up-value">0.00</span>
+          <input id="source-up" type="range" min="-1.2" max="1.2" value="0" step="0.01" />
+        </label>
+        <label>
+          Forward
+          <span id="source-forward-value">0.00</span>
+          <input id="source-forward" type="range" min="-1.2" max="1.2" value="0" step="0.01" />
         </label>
       </section>
       <div class="controls">
