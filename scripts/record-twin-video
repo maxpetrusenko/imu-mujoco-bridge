@@ -1,0 +1,74 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+LAB_URL="${LAB_URL:-http://127.0.0.1:4173/web/twin.html}"
+OUTPUT="${1:-docs/twin-direct-control.mp4}"
+TMP_DIR="$(mktemp -d)"
+WEBM="$TMP_DIR/twin.webm"
+
+cleanup() {
+  trash "$TMP_DIR" 2>/dev/null || true
+}
+trap cleanup EXIT
+
+node - "$LAB_URL" "$TMP_DIR" <<'JS'
+const { chromium } = require("playwright");
+
+const url = process.argv[2];
+const videoDir = process.argv[3];
+
+(async () => {
+  const browser = await chromium.launch();
+  const context = await browser.newContext({
+    viewport: { width: 1440, height: 900 },
+    deviceScaleFactor: 1,
+    recordVideo: { dir: videoDir, size: { width: 1440, height: 900 } },
+  });
+  const page = await context.newPage();
+  await page.goto(url);
+  await page.waitForFunction(() => window.__TWIN_READY === true);
+  await page.waitForTimeout(900);
+
+  const canvas = page.locator("#twin-scene");
+  const box = await canvas.boundingBox();
+  const startX = box.x + box.width * 0.18;
+  const startY = box.y + box.height * 0.3;
+  const endX = box.x + box.width * 0.88;
+  const endY = box.y + box.height * 0.22;
+
+  await page.mouse.move(startX, startY);
+  await page.mouse.down();
+  await page.mouse.move(endX, endY, { steps: 60 });
+  await page.mouse.up();
+  await page.waitForTimeout(600);
+
+  await page.mouse.move(startX, startY);
+  await page.mouse.wheel(0, 2400);
+  await page.waitForFunction(
+    () =>
+      window.__TWIN_METRICS?.mode === "manual" &&
+      Math.abs(window.__TWIN_METRICS?.manualYaw ?? 0) >= 360 &&
+      Math.abs(window.__TWIN_METRICS?.manualRoll ?? 0) >= 360
+  );
+  await page.waitForTimeout(1200);
+
+  await page.getByRole("button", { name: "Auto replay" }).click();
+  await page.waitForTimeout(1200);
+  await context.close();
+  await browser.close();
+})();
+JS
+
+RECORDED="$(find "$TMP_DIR" -type f -name '*.webm' -print -quit)"
+if [[ -z "$RECORDED" ]]; then
+  echo "no Playwright recording produced" >&2
+  exit 1
+fi
+mv "$RECORDED" "$WEBM"
+
+ffmpeg -y -i "$WEBM" \
+  -vf "pad=ceil(iw/2)*2:ceil(ih/2)*2" \
+  -c:v libx264 -pix_fmt yuv420p -movflags +faststart \
+  "$OUTPUT"
+
+printf 'Recorded %s\n' "$OUTPUT"

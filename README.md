@@ -161,6 +161,8 @@ ATOM Lite plus BNO055 source rig linked to a response body:
 
 ![3D twin source rig and response body](docs/twin-screenshot.png)
 
+[Watch the direct-control twin video](docs/twin-direct-control.mp4)
+
 - left source rig: the virtual IMU stream;
 - cable: the UDP packet link, with moving pulses;
 - right response box: a damped spring body replying to the source movement.
@@ -177,6 +179,12 @@ The twin starts in replay mode. Use `Manual source`, drag the scene for 360 yaw
 and pitch, use the mouse wheel for roll, or set exact roll, pitch, and yaw
 values with sliders. The right body keeps responding through the same damped
 wire simulation.
+
+Record the direct-control video:
+
+```sh
+scripts/record-twin-video docs/twin-direct-control.mp4
+```
 
 ## Camera Marker Mode
 

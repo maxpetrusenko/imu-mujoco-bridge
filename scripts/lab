@@ -2,17 +2,20 @@
 set -euo pipefail
 
 LAB_HOST="${LAB_HOST:-127.0.0.1}"
+export LAB_HOST
 
 if [[ -z "${LAB_PORT:-}" ]]; then
   LAB_PORT="$(
     python3 - <<'PY'
 import socket
+import os
 
+host = os.environ["LAB_HOST"]
 for port in range(4173, 4200):
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as probe:
         probe.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         try:
-            probe.bind(("127.0.0.1", port))
+            probe.bind((host, port))
         except OSError:
             continue
         print(port)
